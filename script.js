@@ -98,6 +98,32 @@ const state = new State("Alice's House", [
 ]);
 
 
-function runRobot(state) {
-  // The runRobot function uses the robot function to repeatedly update the state until there are no more parcels.
+// Use the robot function to repeatedly update the state using the data returned by the robot function.
+function runRobot(state, robot) {
+  let memory = [];
+
+  while (state.parcels.length > 0) {
+    const action = robot(state, memory);
+    console.log(state);
+
+    state.move(action.destination);
+    memory = action.memory;
+  }
 }
+
+
+// Pass the robot function into the runRobot function instead of using a single function in order to modularize the program further for more flexibility.
+// The robot function is where our main intelligent engine resides. It is the brains behind where the robot decides to move based on its algorithm.
+// The runRobot function is what controls the entire simulation, and when the program is considered finished. Think of runRobot() like the actual main program loop, while robot() is the robot itself.
+function robot(state, memory) {
+  const possibleDestinations = graph[state.place].edges;
+  const randomIndex = Math.floor(Math.random() * possibleDestinations.length);
+
+  return {
+    destination: possibleDestinations[randomIndex],
+    memory: memory
+  };
+}
+
+
+runRobot(state, robot);
