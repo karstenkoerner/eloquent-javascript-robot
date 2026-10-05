@@ -4,6 +4,7 @@
 
 
 
+
 const roads = [
   "Alice's House-Bob's House",   "Alice's House-Cabin",
   "Alice's House-Post Office",   "Bob's House-Town Hall",
@@ -113,16 +114,67 @@ function runRobot(state, robot) {
 
 
 // Pass the robot function into the runRobot function instead of using a single function in order to modularize the program further for more flexibility.
-// The robot function is where our main intelligent engine resides. It is the brains behind where the robot decides to move based on its algorithm.
+// The robot function determines what to do next on a move-to-move basis. It is the brains behind where the robot decides to move based on its algorithm.
 // The runRobot function is what controls the entire simulation, and when the program is considered finished. Think of runRobot() like the actual main program loop, while robot() is the robot itself.
 function robot(state, memory) {
-  const possibleDestinations = graph[state.place].edges;
-  const randomIndex = Math.floor(Math.random() * possibleDestinations.length);
+  
+  // If the memory length is more than zero, we are currently on a path task initiated by a previous run of the runRobot loop. The robot saves the memory and feeds it back to runRobot which then gives it back the next go around.
+  // The actual robot engine (in the else block below) will determine what paths to take next and then return a fresh memory array with all the locations which the next few iterations of robot() will simply feed the destination back to runRobot().
+  // It's like a big game of catch, where they are constantly throwing data back and forth between each other. 
+  if (memory.length > 0) {
+    return {
+      destination: memory[0],
+      memory: memory.slice(1)
+      };
+  } else {
+    const parcel = state.parcels[0];
+    const target = parcel.place === state.place
+      ? parcel.address
+      : parcel.place;
 
-  return {
-    destination: possibleDestinations[randomIndex],
-    memory: memory
-  };
+      // A third level of modularization, the findRoute function represents another abstraction. This kind of modular thinking is necessary to keep large projects more organized.
+    const route = findRoute(graph, state.place, target);
+
+    return {
+      destination: route[0],
+      memory: route.slice(1)
+    };
+  }
+}
+
+
+// The findRoute is what returns an actual path based on where we want to go and where we are currently at. It is the pathfinder algorithm for our robot.
+// It requires the graph object, a start place (where the robot currently is), and a target place (where the robot wants to navigate to).
+// Something to note about all these functions is that even though you aren't technically required to pass many of these variables into the function (as they are usually global variables, such as state), we do so anyway.
+// This is because it makes it easier to immediately know what a given function is dependent on. It's also good practice because it further modularizes the function and prevents it from relying upon a single state object, for example.
+function findRoute(graph, start, target) {
+  const discoveredNodes = [start];
+  const work = [
+    {
+      place: start,
+      route: []
+    }
+  ];
+
+  for (let i = 0; i < work.length; i++) {
+    const neighbors = graph[work[i].place].edges;
+
+    for (const neighbor of neighbors) {
+      if (neighbor === target) {
+        const route = [...work[i].route, target];
+
+        return route;
+      } else if (!discoveredNodes.includes(neighbor)) {
+        const route = [...work[i].route, neighbor];
+
+        discoveredNodes.push(neighbor);
+        work.push({
+          place: neighbor,
+          route: route
+        });
+      }
+    }
+  }
 }
 
 
