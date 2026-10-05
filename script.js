@@ -127,17 +127,25 @@ function robot(state, memory) {
       memory: memory.slice(1)
       };
   } else {
-    const parcel = state.parcels[0];
-    const target = parcel.place === state.place
-      ? parcel.address
-      : parcel.place;
+    // Select what parcel of the remaining parcels to make our next target.
+    const routes = [];
+
+    for (const parcel of state.parcels) {
+      const target = parcel.place === state.place
+        ? parcel.address
+        : parcel.place;
+
+      routes.push(findRoute(graph, state.place, target));
+    }
 
       // A third level of modularization, the findRoute function represents another abstraction. This kind of modular thinking is necessary to keep large projects more organized.
-    const route = findRoute(graph, state.place, target);
+    const shortestRoute = routes.reduce((shortest, route) => {
+      return shortest.length > route.length ? route : shortest;
+    });
 
     return {
-      destination: route[0],
-      memory: route.slice(1)
+      destination: shortestRoute[0],
+      memory: shortestRoute.slice(1)
     };
   }
 }
@@ -178,4 +186,6 @@ function findRoute(graph, start, target) {
 }
 
 
+// Calling the runRobot function starts the program, and all we need to do next is run the code.
+// Using Node.js, simply type "node [filename]" to run the file.
 runRobot(state, robot);
