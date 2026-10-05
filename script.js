@@ -178,4 +178,6 @@ function findRoute(graph, start, target) {
 }
 
 
+// Calling the runRobot function starts the program, and all we need to do next is run the code.
+// Using Node.js, simply type "node [filename]" to run the file.
 runRobot(state, robot);
